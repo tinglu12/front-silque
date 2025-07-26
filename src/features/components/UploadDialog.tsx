@@ -8,6 +8,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import React from 'react';
+import UploadForm from './UploadForm';
 
 export const UploadDialog = () => {
   return (
@@ -18,11 +19,8 @@ export const UploadDialog = () => {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Upload Clothes</DialogTitle>
-          <DialogDescription>
-            This action cannot be undone. This will permanently delete your
-            account and remove your data from our servers.
-          </DialogDescription>
         </DialogHeader>
+        <UploadForm />
       </DialogContent>
     </Dialog>
   );
