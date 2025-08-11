@@ -15,6 +15,8 @@ import {
 } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
 import { useForm } from 'react-hook-form';
+import { api } from '@/lib/api-client';
+import { AxiosError } from 'axios';
 
 const fileSizeLimit = 100 * 1024 * 1024 * 1024; // 100 GB
 
@@ -40,9 +42,29 @@ const UploadForm = () => {
     },
   });
 
-  const handleFormSubmit = (data: z.infer<typeof formSchema>) => {
-    console.log('File submitted:', data.file);
-    // Handle file upload logic here
+  const handleFormSubmit = async (data: z.infer<typeof formSchema>) => {
+    try {
+      const formData = new FormData();
+      formData.append('files', data.file);
+
+      // Log what we're sending
+      console.log(
+        'File being uploaded:',
+        data.file.name,
+        data.file.size,
+        data.file.type
+      );
+
+      const response = await api.post('/v1/upload', formData);
+      console.log('Success:', response);
+    } catch (error) {
+      // Log the full error details
+      console.error('Upload failed:', error);
+      if (error instanceof AxiosError) {
+        console.error('Error status:', error.response?.status);
+        console.error('Error data:', error.response?.data);
+      }
+    }
   };
 
   return (
@@ -65,10 +87,7 @@ const UploadForm = () => {
                   }}
                 />
               </FormControl>
-              <FormDescription>
-                Upload your clothes. Supported formats include images and CSV
-                files for bulk uploads.
-              </FormDescription>
+              <FormDescription>Upload your clothes.</FormDescription>
               <FormMessage />
             </FormItem>
           )}
