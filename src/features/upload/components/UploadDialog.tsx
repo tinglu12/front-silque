@@ -1,3 +1,5 @@
+'use client';
+
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -7,7 +9,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import React from 'react';
+import { useState } from 'react';
 import UploadForm from './UploadForm';
 
 export const UploadDialog = () => {
@@ -16,7 +18,10 @@ export const UploadDialog = () => {
       <DialogTrigger asChild>
         <Button variant="outline">Upload File</Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent
+        aria-describedby="upload-dialog-description"
+        className="flex flex-col min-w-[80vw] h-[80vh]"
+      >
         <DialogHeader>
           <DialogTitle>Upload Clothes</DialogTitle>
         </DialogHeader>

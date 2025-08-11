@@ -1,7 +1,7 @@
 'use client';
 
 import { Input } from '@/components/ui/input';
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -17,24 +17,30 @@ import { Button } from '@/components/ui/button';
 import { useForm } from 'react-hook-form';
 import { api } from '@/lib/api-client';
 import { AxiosError } from 'axios';
-
-const fileSizeLimit = 100 * 1024 * 1024 * 1024; // 100 GB
-
-const formSchema = z.object({
-  file: z
-    .instanceof(File)
-    .refine(
-      (file) => ['image/png', 'image/jpeg', 'image/jpg'].includes(file.type),
-      {
-        message: 'Please select at least one file to upload',
-      }
-    )
-    .refine((file) => file.size <= fileSizeLimit, {
-      message: `File size must be less than ${fileSizeLimit / (1024 * 1024 * 1024)} GB`,
-    }),
-});
+import { formSchema } from '@/features/upload/types/schema';
+import UploadArea from './UploadArea';
 
 const UploadForm = () => {
+  const uploadRef = useRef<HTMLInputElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [files, setFiles] = useState<File[]>([]);
+
+  const handleFilesChange = (files: File[]) => {
+    setFiles(files);
+  };
+
+  const handleUpload = () => {
+    uploadRef.current?.click();
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>, field: any) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const files = e.dataTransfer.files;
+    field.onChange(files);
+    setFiles(Array.from(files));
+  };
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -45,15 +51,10 @@ const UploadForm = () => {
   const handleFormSubmit = async (data: z.infer<typeof formSchema>) => {
     try {
       const formData = new FormData();
-      formData.append('files', data.file);
-
-      // Log what we're sending
-      console.log(
-        'File being uploaded:',
-        data.file.name,
-        data.file.size,
-        data.file.type
-      );
+      for (const file of Array.from(data.file)) {
+        console.log(file);
+        formData.append('files', file);
+      }
 
       const response = await api.post('/v1/upload', formData);
       console.log('Success:', response);
@@ -69,31 +70,41 @@ const UploadForm = () => {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleFormSubmit)}>
+      <form
+        onSubmit={form.handleSubmit(handleFormSubmit)}
+        className="flex flex-col gap-4 h-full justify-between"
+      >
         <FormField
           control={form.control}
           name="file"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="h-full w-full items-center justify-center flex flex-col">
               <FormControl>
                 <Input
+                  ref={uploadRef}
                   type="file"
-                  accept=".jpg,.jpeg,.png,.csv"
+                  accept=".jpg,.jpeg,.png"
                   multiple
                   onChange={(e) => {
                     if (e.target.files && e.target.files.length > 0) {
-                      field.onChange(e.target.files[0]);
+                      field.onChange(e.target.files);
+                      handleFilesChange(Array.from(e.target.files));
                     }
                   }}
+                  className="sr-only"
                 />
               </FormControl>
-              <FormDescription>Upload your clothes.</FormDescription>
+              <UploadArea
+                handleDrop={handleDrop}
+                field={field}
+                handleUpload={handleUpload}
+              />
               <FormMessage />
             </FormItem>
           )}
         />
-        <Button type="submit" className="mt-4">
-          Submit
+        <Button type="submit" className="mt-4 cursor-pointer">
+          Upload
         </Button>
         <FormMessage />
       </form>
