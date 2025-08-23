@@ -1,13 +1,8 @@
-import { Clothes } from '@/features/clothes-display/types/clothes';
-import { api } from '@/lib/api-client';
-import { useEffect, useState } from 'react';
+import { useGetClothes } from '@/features/clothes-display/lib/queries';
+import { ClothesDTO } from '@/features/clothes-display/types/clothes';
 
 const useClothes = () => {
-  const [clothes, setClothes] = useState<Clothes[]>([]);
+  const { data: clothes = [] } = useGetClothes();
 
-  useEffect(() => {
-    const fetchClothes = async () => {
-      const response = await api.get('/clothes');
-    };
-  }, []);
+  return { clothes };
 };
